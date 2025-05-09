@@ -1,14 +1,14 @@
-import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Cog icon
+import { Ionicons } from '@expo/vector-icons';
+
 
 export default function App() {
   const [board, setBoard] = useState<string[]>(Array(9).fill(""));
   const [currentPlayer, setCurrentPlayer] = useState<"X" | "O">("X");
   const [winner, setWinner] = useState<string | null>(null);
   const [showGame, setShowGame] = useState(false);
-  const [showMenu, setShowMenu] = useState(false); // NEW
+  const [showMenu, setShowMenu] = useState(false);
 
   const checkWinner = (newBoard: string[]) => {
     const winPatterns = [
@@ -50,18 +50,28 @@ export default function App() {
 
   const renderGameScreen = () => (
     <View style={styles.container}>
-      {/* Cog Icon */}
       <TouchableOpacity style={styles.cogIcon} onPress={() => setShowMenu(true)}>
-        <Ionicons name="settings" size={28} color="#333" />
+        <Ionicons name="settings" size={28} color="#fff" />
       </TouchableOpacity>
 
-      <Text style={styles.status}>
-        {winner
-          ? winner === "Draw"
-            ? "It's a Draw!"
-            : `${winner} Wins!`
-          : `Turn: ${currentPlayer}`}
-      </Text>
+      {winner && (
+      <Modal transparent animationType="fade" visible>
+        <View style={styles.winnerOverlay}>
+          <View style={styles.winnerContainer}>
+            <Text style={styles.winnerText}>
+              {winner === "Draw" ? "It's a Draw!" : `${winner} Wins!`}
+            </Text>
+            <TouchableOpacity style={styles.resetButton} onPress={resetGame}>
+              <Text style={styles.resetText}>Reset Game</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    )}
+
+{!winner && (
+  <Text style={styles.turnText}>Turn: {currentPlayer}</Text>
+)}
 
       <View style={styles.board}>
         {board.map((cell, index) => (
@@ -70,15 +80,26 @@ export default function App() {
             style={styles.cell}
             onPress={() => handlePress(index)}
           >
-            <Text style={styles.cellText}>{cell}</Text>
+            <Text
+  style={[
+    styles.cellText,
+    cell === "X" && { color: "#F29089" },
+    cell === "O" && { color: "#3F7A63" },
+  ]}
+>
+  {cell}
+</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Modal Menu */}
       <Modal visible={showMenu} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.menuContainer}>
+            <TouchableOpacity onPress={() => setShowMenu(false)} style={styles.closeButton}>
+              <Ionicons name="close-circle" size={28} color="#fff" />
+            </TouchableOpacity>
+
             <TouchableOpacity onPress={() => { setShowMenu(false); setShowGame(false); resetGame(); }}>
               <Text style={styles.menuItem}>Main Menu</Text>
             </TouchableOpacity>
@@ -93,8 +114,10 @@ export default function App() {
 
   const renderMainMenu = () => (
     <View style={styles.container}>
-      <Text style={styles.title}>Tic Tac Toe</Text>
-      <TouchableOpacity style={styles.resetButton} onPress={() => setShowGame(true)}>
+      <Text style={styles.title}>TIC</Text>
+      <Text style={styles.title}>TAC</Text>
+      <Text style={styles.title}>TOE</Text>
+      <TouchableOpacity style={styles.playButton} onPress={() => setShowGame(true)}>
         <Text style={styles.resetText}>Play Game</Text>
       </TouchableOpacity>
     </View>
@@ -108,44 +131,59 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f4f4f4",
+    backgroundColor: "#105170",
   },
   title: {
-    fontSize: 40,
+    fontSize: 100,
     fontWeight: "bold",
-    marginBottom: 20,
-  },
-  status: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+    color: "#fff",
+    textAlign: "center",
+    lineHeight: 98,
+    marginVertical: 0,
+    paddingVertical: 0,
   },
   board: {
+    width: 314,
     flexDirection: "row",
     flexWrap: "wrap",
-    width: 300,
+    borderWidth: 4,
+    borderColor: "#964B00",
+    borderRadius: 12,
+    backgroundColor: "#964B00",
   },
   cell: {
     width: 100,
     height: 100,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#000",
+    margin: 1,
+    backgroundColor: "#F0F4F8",
+    borderRadius: 12,
   },
   cellText: {
-    fontSize: 36,
+    fontSize: 80,
     fontWeight: "bold",
+    color: "#3D619B",
+    textAlign: "center",
+    lineHeight: 100,
+    textAlignVertical: "center",
   },
   resetButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "#007BFF",
-    borderRadius: 5,
+    marginTop: 10,
+    padding: 15,
+    backgroundColor: "#105170",
+    borderRadius: 10,
+  },
+  playButton: {
+    marginTop: 10,
+    padding: 15,
+    backgroundColor: "#964B00",
+    borderRadius: 10,
   },
   resetText: {
     color: "#fff",
-    fontSize: 18,
+    fontWeight: "bold",
+    fontSize: 30,
   },
   cogIcon: {
     position: "absolute",
@@ -159,28 +197,51 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   menuContainer: {
-    backgroundColor: "#fff",
+    backgroundColor: "#964B00",
     padding: 20,
     borderRadius: 10,
     width: 200,
     alignItems: "center",
   },
   menuItem: {
-    fontSize: 20,
+    fontSize: 30,
     marginVertical: 10,
     fontWeight: "bold",
-    color: "#007BFF",
+    color: "#fff",
   },
   closeButton: {
     position: 'absolute',
     top: 5,
-    right: 10,
+    right: 5,
+    padding: 5,
     zIndex: 1,
   },
-  
-  closeText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#999',
+  winnerOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  winnerContainer: {
+    backgroundColor: "#964B00",
+    padding: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    elevation: 100,
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  winnerText: {
+    fontSize: 32,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#fff",
+  },
+  turnText: {
+    fontSize: 40,
+    color: "#fff",
+    fontWeight: "bold",
+    marginBottom: 20,
   },
 });
